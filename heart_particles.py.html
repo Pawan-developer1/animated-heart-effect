@@ -1,0 +1,150 @@
+<html>
+<head>
+<title>heart_particles.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #0033b3;}
+.s1 { color: #080808;}
+.s2 { color: #8c8c8c; font-style: italic;}
+.s3 { color: #1750eb;}
+.s4 { color: #067d17;}
+</style>
+</head>
+<body bgcolor="#ffffff">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+heart_particles.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">pygame</span>
+<span class="s0">import </span><span class="s1">random</span>
+<span class="s0">import </span><span class="s1">math</span>
+<span class="s0">import </span><span class="s1">colorsys</span>
+
+<span class="s2"># -------------------</span>
+<span class="s2"># CONFIG</span>
+<span class="s2"># -------------------</span>
+<span class="s1">WIDTH, HEIGHT = </span><span class="s3">700</span><span class="s1">, </span><span class="s3">700</span>
+<span class="s1">PARTICLE_COUNT = </span><span class="s3">12000</span>
+<span class="s1">NAME = </span><span class="s4">&quot;Love You Friends&quot;</span>
+<span class="s1">BG_COLOR = (</span><span class="s3">10</span><span class="s1">, </span><span class="s3">5</span><span class="s1">, </span><span class="s3">25</span><span class="s1">)</span>
+
+<span class="s1">pygame.init()</span>
+<span class="s1">screen = pygame.display.set_mode((WIDTH, HEIGHT))</span>
+<span class="s1">pygame.display.set_caption(</span><span class="s4">&quot;Big Heart Animation&quot;</span><span class="s1">)</span>
+
+<span class="s1">font_path = </span><span class="s4">&quot;LeckerliOne-Regular.ttf&quot;</span>
+<span class="s0">try</span><span class="s1">:</span>
+    <span class="s1">font = pygame.font.Font(font_path, </span><span class="s3">72</span><span class="s1">)</span>
+<span class="s0">except </span><span class="s1">pygame.error:</span>
+    <span class="s1">print(</span><span class="s4">&quot;Font file not found. Using Arial as a fallback.&quot;</span><span class="s1">)</span>
+    <span class="s1">font = pygame.font.SysFont(</span><span class="s4">&quot;Arial&quot;</span><span class="s1">, </span><span class="s3">72</span><span class="s1">, bold=</span><span class="s0">True</span><span class="s1">)</span>
+
+<span class="s2"># -------------------</span>
+<span class="s2"># Heart Point Generator</span>
+<span class="s2"># -------------------</span>
+<span class="s0">def </span><span class="s1">heart_points(n, scale, offset):</span>
+    <span class="s1">points = []</span>
+    <span class="s0">for </span><span class="s1">_ </span><span class="s0">in </span><span class="s1">range(n):</span>
+        <span class="s1">t = random.uniform(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">2 </span><span class="s1">* math.pi)</span>
+        <span class="s1">r = random.uniform(</span><span class="s3">0.5</span><span class="s1">, </span><span class="s3">1.0</span><span class="s1">)</span>
+        <span class="s1">x = scale * r * (</span><span class="s3">16 </span><span class="s1">* math.sin(t) ** </span><span class="s3">3</span><span class="s1">)</span>
+        <span class="s1">y = -scale * r * (</span><span class="s3">13 </span><span class="s1">* math.cos(t) - </span><span class="s3">5 </span><span class="s1">* math.cos(</span><span class="s3">2 </span><span class="s1">* t) -</span>
+                          <span class="s3">2 </span><span class="s1">* math.cos(</span><span class="s3">3 </span><span class="s1">* t) - math.cos(</span><span class="s3">4 </span><span class="s1">* t))</span>
+        <span class="s1">x += random.uniform(-</span><span class="s3">1.5</span><span class="s1">, </span><span class="s3">1.5</span><span class="s1">)</span>
+        <span class="s1">y += random.uniform(-</span><span class="s3">1.5</span><span class="s1">, </span><span class="s3">1.5</span><span class="s1">)</span>
+        <span class="s1">points.append((x + offset[</span><span class="s3">0</span><span class="s1">], y + offset[</span><span class="s3">1</span><span class="s1">]))</span>
+    <span class="s0">return </span><span class="s1">points</span>
+
+<span class="s1">heart_max_width = </span><span class="s3">32</span>
+<span class="s1">heart_max_height = </span><span class="s3">20</span>
+<span class="s1">scale_x = (WIDTH - </span><span class="s3">50</span><span class="s1">) / heart_max_width</span>
+<span class="s1">scale_y = (HEIGHT - </span><span class="s3">50</span><span class="s1">) / heart_max_height</span>
+<span class="s1">HEART_SCALE = min(scale_x, scale_y)</span>
+
+<span class="s1">heart_positions = heart_points(PARTICLE_COUNT, HEART_SCALE, (WIDTH // </span><span class="s3">2</span><span class="s1">, HEIGHT // </span><span class="s3">2</span><span class="s1">))</span>
+
+<span class="s2"># -------------------</span>
+<span class="s2"># Particle Class with Rainbow Colors</span>
+<span class="s2"># -------------------</span>
+<span class="s0">class </span><span class="s1">Particle:</span>
+    <span class="s0">def </span><span class="s1">__init__(self, target):</span>
+        <span class="s1">self.x, self.y = random.randint(</span><span class="s3">0</span><span class="s1">, WIDTH), random.randint(</span><span class="s3">0</span><span class="s1">, HEIGHT)</span>
+        <span class="s1">self.target = target</span>
+        <span class="s1">self.speed = random.uniform(</span><span class="s3">0.02</span><span class="s1">, </span><span class="s3">0.05</span><span class="s1">)</span>
+        <span class="s1">self.size = random.randint(</span><span class="s3">2</span><span class="s1">, </span><span class="s3">3</span><span class="s1">)</span>
+        <span class="s1">self.hue = random.random()</span>
+
+    <span class="s0">def </span><span class="s1">update(self, pulse_scale):</span>
+        <span class="s1">tx, ty = self.target</span>
+        <span class="s1">cx, cy = WIDTH // </span><span class="s3">2</span><span class="s1">, HEIGHT // </span><span class="s3">2</span>
+        <span class="s1">dist_x = tx - cx</span>
+        <span class="s1">dist_y = ty - cy</span>
+        <span class="s1">tx_pulsed = cx + dist_x * pulse_scale</span>
+        <span class="s1">ty_pulsed = cy + dist_y * pulse_scale</span>
+        <span class="s1">dx, dy = tx_pulsed - self.x, ty_pulsed - self.y</span>
+        <span class="s1">self.x += dx * self.speed</span>
+        <span class="s1">self.y += dy * self.speed</span>
+
+        <span class="s2"># Rainbow color cycling</span>
+        <span class="s1">self.hue += </span><span class="s3">0.002</span>
+        <span class="s0">if </span><span class="s1">self.hue &gt; </span><span class="s3">1</span><span class="s1">:</span>
+            <span class="s1">self.hue -= </span><span class="s3">1</span>
+        <span class="s1">r, g, b = colorsys.hsv_to_rgb(self.hue, </span><span class="s3">1</span><span class="s1">, </span><span class="s3">1</span><span class="s1">)</span>
+        <span class="s1">self.color = (int(r * </span><span class="s3">255</span><span class="s1">), int(g * </span><span class="s3">255</span><span class="s1">), int(b * </span><span class="s3">255</span><span class="s1">))</span>
+
+    <span class="s0">def </span><span class="s1">draw(self, surf):</span>
+        <span class="s1">pygame.draw.circle(surf, self.color, (int(self.x), int(self.y)), self.size)</span>
+
+<span class="s1">particles = [Particle(target) </span><span class="s0">for </span><span class="s1">target </span><span class="s0">in </span><span class="s1">heart_positions]</span>
+
+<span class="s2"># -------------------</span>
+<span class="s2"># Main Loop</span>
+<span class="s2"># -------------------</span>
+<span class="s1">running = </span><span class="s0">True</span>
+<span class="s1">clock = pygame.time.Clock()</span>
+<span class="s1">time_counter = </span><span class="s3">0</span>
+
+<span class="s1">fade_alpha = </span><span class="s3">0</span>
+<span class="s1">scale_factor = </span><span class="s3">1.0</span>
+
+<span class="s0">while </span><span class="s1">running:</span>
+    <span class="s1">screen.fill(BG_COLOR)</span>
+    <span class="s1">time_counter += </span><span class="s3">1</span>
+
+    <span class="s2"># Heart pulsing</span>
+    <span class="s1">pulse_scale = </span><span class="s3">1 </span><span class="s1">+ </span><span class="s3">0.05 </span><span class="s1">* math.sin(time_counter * </span><span class="s3">0.05</span><span class="s1">)</span>
+
+    <span class="s0">for </span><span class="s1">p </span><span class="s0">in </span><span class="s1">particles:</span>
+        <span class="s1">p.update(pulse_scale)</span>
+        <span class="s1">p.draw(screen)</span>
+
+    <span class="s2"># Show attractive rainbow text after ~5 seconds</span>
+    <span class="s0">if </span><span class="s1">time_counter &gt; </span><span class="s3">300</span><span class="s1">:</span>
+        <span class="s1">fade_alpha = min(</span><span class="s3">255</span><span class="s1">, fade_alpha + </span><span class="s3">3</span><span class="s1">)</span>
+        <span class="s1">scale_factor = </span><span class="s3">1 </span><span class="s1">+ </span><span class="s3">0.05 </span><span class="s1">* math.sin(time_counter * </span><span class="s3">0.1</span><span class="s1">)</span>
+
+        <span class="s1">text_hue = (time_counter * </span><span class="s3">0.005</span><span class="s1">) % </span><span class="s3">1.0</span>
+        <span class="s1">r, g, b = colorsys.hsv_to_rgb(text_hue, </span><span class="s3">1</span><span class="s1">, </span><span class="s3">1</span><span class="s1">)</span>
+        <span class="s1">dynamic_color = (int(r * </span><span class="s3">255</span><span class="s1">), int(g * </span><span class="s3">255</span><span class="s1">), int(b * </span><span class="s3">255</span><span class="s1">))</span>
+
+        <span class="s1">text_surf = font.render(NAME, </span><span class="s0">True</span><span class="s1">, dynamic_color)</span>
+        <span class="s1">text_surf.set_alpha(fade_alpha)</span>
+        <span class="s1">scaled = pygame.transform.rotozoom(text_surf, </span><span class="s3">0</span><span class="s1">, scale_factor)</span>
+        <span class="s1">rect = scaled.get_rect(center=(WIDTH // </span><span class="s3">2</span><span class="s1">, HEIGHT // </span><span class="s3">2</span><span class="s1">))</span>
+        <span class="s1">screen.blit(scaled, rect)</span>
+    <span class="s0">else</span><span class="s1">:</span>
+        <span class="s1">fade_alpha = </span><span class="s3">0</span>
+        <span class="s1">scale_factor = </span><span class="s3">1.0</span>
+
+    <span class="s0">for </span><span class="s1">event </span><span class="s0">in </span><span class="s1">pygame.event.get():</span>
+        <span class="s0">if </span><span class="s1">event.type == pygame.QUIT:</span>
+            <span class="s1">running = </span><span class="s0">False</span>
+
+    <span class="s1">pygame.display.flip()</span>
+    <span class="s1">clock.tick(</span><span class="s3">60</span><span class="s1">)</span>
+
+<span class="s1">pygame.quit()</span>
+</pre>
+</body>
+</html>
